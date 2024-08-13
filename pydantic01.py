@@ -10,6 +10,7 @@ from pydantic import BaseModel
 # pip install pydantic
 
 # 성적 모델 정의
+# BaseModel : 유효성 체크
 class Sungjuk(BaseModel):
     name: str
     kor: int
