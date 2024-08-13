@@ -85,6 +85,15 @@ def readone_sj(sjno: int, db: Session = Depends(get_db)):
     sungjuks = db.query(Sungjuk).filter(Sungjuk.sjno == sjno).first()
     return sungjuks
 
+# 성적 삭제 - 학생번호로 조회
+@app.delete('/sj/{sjno}', response_model=Optional[SungjukModel])
+def readone_sj(sjno: int, db: Session = Depends(get_db)):
+    sungjuk = db.query(Sungjuk).filter(Sungjuk.sjno == sjno).first()
+    if sungjuk:
+        db.delete(sungjuk)
+        db.commit()
+    return sungjuk
+
 
 # __name__: 실행중인 모듈 이름을 의미하는 매직키워드
 # 만일, 파일을 직접 실행하면 __name__의 이름은 __main__으로 자동지정
