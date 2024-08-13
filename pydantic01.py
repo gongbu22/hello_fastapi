@@ -25,6 +25,11 @@ app = FastAPI()
 def sayhello():
     return 'Hello, pydantic!!'
 
+# 고전 API 의 CRUD
+# /sjadd, /sjall, /sjone, /sjmod, /sjrmv
+# restful API 의 CRUD
+# /sj (post), /sj (get), /sj/이름 (get), /sj (put), /sj/이름 (delete)
+
 # 성적 데이터 조회
 # response_model : 응답데이터 형식 지정
 # 이를 통해 클라이언트는 서버가 어떤 종류의 데이터를 응답으로 보내는지 알 수 있음
@@ -63,6 +68,15 @@ def sjone(name: str):
         if sj.name == name:
             findone = sj
     return findone
+
+# 성적데이터 삭제 - 이름으로 삭제
+@app.delete('/sj/{name}', response_model=Sungjuk)
+def sjrmv(name: str):
+    rmvone = Sungjuk(name='none', kor=00, eng=00, mat=00)
+    for idx, sj in enumerate(sungjuk_db):
+        if sj.name == name:
+            rmvone = sungjuk_db.pop(idx)
+    return rmvone
 
 if __name__ == "__main__":
     import uvicorn
