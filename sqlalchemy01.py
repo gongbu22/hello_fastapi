@@ -62,6 +62,21 @@ def read_sj(db: Session = Depends(get_db)):
     sungjuks = db.query(Sungjuk).all()
     return sungjuks
 
+# 성적 추가
+@app.post('/sj', response_model=SungjukModel)
+def sjadd(sj: SungjukModel, db: Session = Depends(get_db)):
+    sj = Sungjuk(**dict(sj))    # 클라이언트가 전송한 성적데이터가
+                                # pydantic으로 유효성 검사후
+                                # 데이터베이스에 저장할 수 있도록
+                                # sqlalchemy 객체로 변환하기 위해 **dict(sj) 사용
+    # pydantic 방식 : Sungjuk(name='통통', kor=99, eng=88, mat=77)
+    # sqlalchemy 방식 : Sungjuk(sj['name'], sj['kor'], sj['eng'], sj['mat'])
+
+    db.add(sj)
+    db.commit()
+    db.refresh(sj)      # 시스템에 반영
+    return sj
+
 
 # __name__: 실행중인 모듈 이름을 의미하는 매직키워드
 # 만일, 파일을 직접 실행하면 __name__의 이름은 __main__으로 자동지정
