@@ -1,4 +1,8 @@
-from fastapi import FastAPI
+from typing import List
+
+from fastapi import FastAPI, Depends
+from pydantic import BaseModel
+from requests import Session
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -26,12 +30,38 @@ class Sungjuk(Base):
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(bind=engine)
 
+# 데이터베이스 세션을 의존성으로 주입하기 위한 함수
+def get_db():
+    db = SessionLocal() # 데이터베이스 세션 객체  split3 cursor, close~ 부분
+    try:
+        yield db    # yield : 파이썬 제너레이터 객체 ex) db 라는 변수를 함수 내 뿐만 아니라 다른 곳에서도 사용하고 반환함
+                    # 함수가 호출될 때 비로소 객체를 반환(넘김)
+    finally:
+        db.close()  # 데이터베이스 세션 닫음 (디비 연결 해제, 리소스 반환)
+
+# pydantic 모델
+class SungjukModel(BaseModel):
+    sjno: int
+    name: str
+    kor: int
+    eng: int
+    mat: int
+
 # FastAPI 메인
 app = FastAPI()
 
 @app.get('/')
 def index():
     return 'Hello, SQLAchemey!!'
+
+# 성적 조회
+# Depends: 의존성 주입 - 디비 세션 제공**
+# => 코드 재사용성 향상, 관리 용이성 향상
+@app.get('/sj', response_model=List[SungjukModel])
+def read_sj(db: Session = Depends(get_db)):
+    sungjuks = db.query(Sungjuk).all()
+    return sungjuks
+
 
 # __name__: 실행중인 모듈 이름을 의미하는 매직키워드
 # 만일, 파일을 직접 실행하면 __name__의 이름은 __main__으로 자동지정
