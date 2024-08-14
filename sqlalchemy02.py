@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import FastAPI
 from fastapi.params import Depends
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Date, DateTime, Integer, String, Sequence, func
+from sqlalchemy import create_engine, Column, DateTime, Integer, String, Sequence, func
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
 from sqlalchemy01 import SessionLocal
@@ -21,14 +21,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 class Member(Base):
-    __tablename__ = 'members'
+    __tablename__ = 'member'
 
     userno = Column(Integer, Sequence('seq_member'), primary_key=True, index=True)
     userid = Column(String, index=True)
     passwd = Column(String)
     name = Column(String)
     email = Column(String)
-    regdate = Column(DateTime(timezone=True), server_default=func.now())
+    regdate = Column(DateTime(timezone=True),server_default=func.now())
 
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(bind=engine)
@@ -42,13 +42,15 @@ def get_db():
         db.close()
 
 # pydantic 모델
-class MemberModel(BaseModel):
-    userno: int
+class NewMemberModel(BaseModel):
     userid: str
     passwd: str
     name: str
     email: str
-    regdate: datetime
+
+class MemberModel(NewMemberModel):
+    userno: int
+    regdate: Optional[datetime]
 
 # FastAPI 메인
 app = FastAPI()
@@ -64,13 +66,15 @@ def read_mem(db: Session = Depends(get_db)):
     return members
 
 # 회원 추가
-@app.post('/member', response_model=MemberModel)
-def memadd(mem: MemberModel, db: Session = Depends(get_db)):
+@app.post('/member', response_model=NewMemberModel)
+# @app.post('/member', response_model=str)
+def memadd(mem: NewMemberModel, db: Session = Depends(get_db)):
     mem = Member(**dict(mem))
     db.add(mem)
     db.commit()
     db.refresh(mem)
     return mem
+    # return '데이터 입력 성공'
 
 # 회원 상세조회
 @app.get('/member/{userno}', response_model=Optional[MemberModel])
@@ -89,10 +93,10 @@ def delete_mem(userno: int, db: Session = Depends(get_db)):
 
 # 회원 수정
 @app.put('/member/{userno}', response_model=Optional[MemberModel])
-def update_mem(Mem: MemberModel, db: Session = Depends(get_db)):
-    member = db.query(Member).filter(Member.userno == Mem.userno).first()
+def update_mem(mem: MemberModel, db: Session = Depends(get_db)):
+    member = db.query(Member).filter(Member.userno == mem.userno).first()
     if member:
-        for key, val in Mem.dict().items():
+        for key, val in mem.dict().items():
             setattr(member, key, val)
         db.commit()
         db.refresh(member)
