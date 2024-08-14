@@ -57,9 +57,13 @@ def zipcode(dong: str):
 def zipcode(dong: str, req: Request):
 
     # 입력한 동으로 zipcode에서 검색하고 결과를 result에 저장
+    # with Session(engine) as sess:
+    #     stmt = select(Zipcode).where(Zipcode.dong.like(f'{dong}%'))
+    #     result = sess.execute(stmt).scalars.all()         # v2 방식 - 권장
+
     with Session(engine) as sess:
-        stmt = select(Zipcode).where(Zipcode.dong.like(f'{dong}%'))
-        result = sess.scalars(stmt).all()
+        where = Zipcode.dong.like(f'{dong}%')
+        result = sess.query(Zipcode).filter(where).all()
 
     # 저장된 검색 결과를 템플릿 엔진을 이용해서 html 결과문서를 만들기 위해
     # TemplateResponse 함수 호출
