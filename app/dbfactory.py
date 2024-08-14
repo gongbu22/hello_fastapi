@@ -13,3 +13,10 @@ async def db_startup():
 
 async def db_shutdown():
     pass
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
