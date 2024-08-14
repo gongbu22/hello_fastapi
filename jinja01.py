@@ -33,7 +33,7 @@ def zipcode(dong: str):
 
     # sessionmaker 없이 디비 객체 직접 생성
     with Session(engine) as sess:
-        stmt = select(Zipcode).where(Zipcode.dong.like(f'{dong}'))
+        stmt = select(Zipcode).where(Zipcode.dong.like(f'{dong}%'))
         rows = sess.scalars(stmt)
 
         for row in rows:
